@@ -140,13 +140,14 @@ on_client_subscribe(#{clientid := ClientId}, _Properties, TopicFilters, _Env) ->
     Topic=erlang:element(1,erlang:hd(TopicFilters)),
     Qos = erlang:element(2,lists:last(TopicFilters)),
     Action = <<"subscribe">>,
-    Now = erlang:timestamp(),
+    %% Now = erlang:timestamp(),
+    Now = calendar:datetime_to_gregorian_seconds(calendar:universal_time())-719528*24*3600,
     Payload = [
 		{device_id, ClientId},
 		{action, Action},  
 		{topic, Topic},
 		{qos, maps:get(qos, Qos)},
-		{ts, now_secs(Now)}
+		{ts, Now}
 	],	
     produce_kafka_payload(Payload),
 	{ok, TopicFilters}.
