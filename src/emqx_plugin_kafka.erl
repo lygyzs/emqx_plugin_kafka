@@ -92,7 +92,7 @@ on_client_connected(ClientInfo = #{clientid := ClientId}, ConnInfo, _Env) ->
               [ClientId, ClientInfo, ConnInfo]),
 		{IpAddr, _Port} = maps:get(peername, ConnInfo),
     	Action = <<"connected">>,
-    	% Now = erlang:timestamp(),
+    	Now = calendar:datetime_to_gregorian_seconds(calendar:universal_time())-719528*24*3600,
     	Online = 1,
     	Payload = [
 		{action, Action}, 
@@ -102,7 +102,7 @@ on_client_connected(ClientInfo = #{clientid := ClientId}, ConnInfo, _Env) ->
 		{ipaddress, iolist_to_binary(ntoa(IpAddr))},
 		{proto_name, maps:get(proto_name, ConnInfo)},
 		{proto_ver, maps:get(proto_ver, ConnInfo)},
-		{timestamp, maps:get(connected_at, ConnInfo)},
+		{timestamp, Now},
 		{online, Online}
     ],
    produce_kafka_payload(Payload),
@@ -112,14 +112,14 @@ on_client_disconnected(ClientInfo = #{clientid := ClientId}, ReasonCode, ConnInf
     io:format("Client(~s) disconnected due to ~p, ClientInfo:~n~p~n, ConnInfo:~n~p~n",
               [ClientId, ReasonCode, ClientInfo, ConnInfo]), 
     Action = <<"disconnected">>,
-    % Now = erlang:timestamp(),
+    Now = calendar:datetime_to_gregorian_seconds(calendar:universal_time())-719528*24*3600,
     Online = 0,
     Payload = [
 		{action, Action}, 
 		{device_id, ClientId}, 
 		{username, maps:get(username, ClientInfo)},
  		{reason, ReasonCode},
-		{timestamp, maps:get(connected_at, ConnInfo)},
+		{timestamp, Now},
 		{online, Online}
 	],	
     produce_kafka_payload(Payload),
@@ -147,7 +147,7 @@ on_client_subscribe(#{clientid := ClientId}, _Properties, TopicFilters, _Env) ->
 		{action, Action},  
 		{topic, Topic},
 		{qos, maps:get(qos, Qos)},
-		{ts, Now}
+		{timestamp, Now}
 	],	
     produce_kafka_payload(Payload),
 	{ok, TopicFilters}.
@@ -156,12 +156,12 @@ on_client_unsubscribe(#{clientid := ClientId}, _Properties, TopicFilters, _Env) 
     io:format("Client(~s) will unsubscribe ~p~n", [ClientId, TopicFilters]),   
 	Topic=erlang:element(1,erlang:hd(TopicFilters)),
     Action = <<"unsubscribe">>,
-    Now = erlang:timestamp(),
+    Now = calendar:datetime_to_gregorian_seconds(calendar:universal_time())-719528*24*3600,
     Payload = [
 		{device_id, ClientId},
 		{action, Action},  
 		{topic, Topic},
-		{ts, now_secs(Now)}
+		{timestamp, Now}
 	],	
     produce_kafka_payload(Payload),
     {ok, TopicFilters}.
